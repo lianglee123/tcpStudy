@@ -1,0 +1,31 @@
+listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+14:58:19.347434 IP client > server: Flags [S], seq 1483914230, win 43690, options [mss 65495,sackOK,TS val 110808313 ecr 0,nop,wscale 7], length 0
+14:58:19.347445 IP server > client: Flags [S.], seq 1450502734, ack 1483914231, win 43690, options [mss 65495,sackOK,TS val 110808313 ecr 110808313,nop,wscale 7], length 0
+14:58:19.347456 IP client > server: Flags [.], ack 1450502735, win 342, options [nop,nop,TS val 110808313 ecr 110808313], length 0
+至此连接建立完毕，server的Seq: 1450502735, client的seq: 1483914231
+
+14:58:19.347506 IP client > server: Flags [P.], seq 1483914231:1483914309, ack 1450502735, win 342, options [nop,nop,TS val 110808313 ecr 110808313], length 78
+14:58:19.347511 IP server > client: Flags [.], ack 1483914309, win 342, options [nop,nop,TS val 110808313 ecr 110808313], length 0
+
+14:58:19.348137 IP server > client: Flags [P.], seq 1450502735:1450502752, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808313], length 17
+14:58:19.348142 IP client > server: Flags [.], ack 1450502752, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+
+14:58:19.348168 IP server > client: Flags [P.], seq 1450502752:1450502789, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 37
+14:58:19.348173 IP client > server: Flags [.], ack 1450502789, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+
+14:58:19.348199 IP server > client: Flags [P.], seq 1450502789:1450502826, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 37
+14:58:19.348201 IP client > server: Flags [.], ack 1450502826, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+
+14:58:19.348215 IP server > client: Flags [P.], seq 1450502826:1450502866, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 40
+14:58:19.348217 IP client > server: Flags [.], ack 1450502866, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+
+14:58:19.348227 IP server > client: Flags [P.], seq 1450502866:1450502887, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 21
+14:58:19.348229 IP client > server: Flags [.], ack 1450502887, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+
+14:58:19.348238 IP server > client: Flags [P.], seq 1450502887:1450502889, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 2
+14:58:19.348240 IP client > server: Flags [.], ack 1450502889, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+14:58:19.348256 IP server > client: Flags [P.], seq 1450502889:1450503449, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 560
+14:58:19.348259 IP client > server: Flags [.], ack 1450503449, win 351, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+14:58:19.348289 IP server > client: Flags [F.], seq 1450503449, ack 1483914309, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+14:58:19.348413 IP client > server: Flags [F.], seq 1483914309, ack 1450503450, win 351, options [nop,nop,TS val 110808314 ecr 110808314], length 0
+14:58:19.348419 IP server > client: Flags [.], ack 1483914310, win 342, options [nop,nop,TS val 110808314 ecr 110808314], length 0

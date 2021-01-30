@@ -1,0 +1,186 @@
+TCP/IP
+
+1. 在Linux中，TCP/IP协议栈是Linux内核自己实现的
+https://blog.csdn.net/Jmilk/article/details/102996612
+
+2. 回环地址(127.0.0.1)也经过TCP/IP栈，但是不用传给网卡处理
+
+<TCP/IP>第三章
+IP数据报，connectionless, unreliable
+IP数据报长度为部首20byte
+IPV4就是值IP数据报部首的那个版本号
+
+IP,ICMP都没有端口信息。
+
+Linux的route命令，可以查看编辑Linux内核的路由表
+
+ARP是链路层协议用以根据ip获取mac地址
+RARP是无盘系统在引导时用来获取IP地址的。这样系统就能从网络上下载引导镜像了
+
+附录A: tcpdump
+1. tcpdump的使用需要把网卡设置为混杂模式(promiscuous Mode)
+tcpdump依赖于BPF, 开启混杂模式后，网卡驱动会把接收和发送的分组
+都复制一份到BPF(BSD Packet Filter), BPF过滤后发送给应用程序(如tcpdump)
+网卡混杂模式:https://zdyxry.github.io/2020/03/18/%E7%90%86%E8%A7%A3%E7%BD%91%E5%8D%A1%E6%B7%B7%E6%9D%82%E6%A8%A1%E5%BC%8F/
+
+<6> ICMP
+ICMP属于链路层，他的帧被ip帧包装发送。
+ICMP是一个很有意思的协议。
+他能用来查询子网掩码，能查时间戳，主要功能是为其他协议(IP, TCP, UDP)通报异常。
+那些Ping不通的机器，是因为关闭了ICMP功能，那么ICMP的通报异常功能就不能被使用了，会造成程序异常吗？
+关闭PING功能应该只是关闭了ICMP的回显应答功能，不会影响ICMP的其他功能。
+
+<7>Ping
+Ping程序基于ICMP的回显。也有记录route，timestamp的功能，但是这些功能都受限。
+
+<8>TraceRoute
+TraceRoute能记录两个ip之间的路由。他借助TTL机制。在路由器接收到失效数据包，会返回一个ICMP报文。
+
+<9>IP选路
+IP是如何确定向那个网卡/路由器/GateWay发送包的
+使用netstat -r 查看路由表
+<10>IP动态选路协议
+
+<11>UDP 用户数据报协议
+为什么UDP被称为基于报文，而TCP被称为基于流？
+UDP是一个简单的面向数据报的运输层协议：进程的每个输出操作都正好产生一个UDP数据报，
+并组装成一份待发送的IP数据报。这与面向流字符的协议不同，
+如TCP，应用程序产生的全体数据与真正发送的单个IP数据报可能没有什么联系。
+
+UDP会产生很多问题。
+当UDP发送速度大于接受速率时，**可能**会触发ICMP抑制报文。但是这并不会降低UDP发送速率。
+
+<12>广播和多播
+广播和多播仅用于UDP,因为TCP是面向连接的。
+
+如何在自己的电脑上拦截审计其他人的流量？
+
+<14>DNS
+操作系统的TCP/IP协议族对DNS一点都不知道
+
+<18>TCP 建立连接
+https://www.cnblogs.com/xiaolincoding/p/12995358.html  连接队列
+发送RST，后TCP是立即断开，而不管已有的数据有没有发送完吗。
+<19>TCP 交互式
+Nelayed算法和TCPNODELAY会导致交互式应用有问题。
+要立即发送, 把PSH位置1可以达到。
+发送端会自动设为PSH的情况：https://blog.csdn.net/ce123_zhouwei/article/details/9038365
+https://www.jianshu.com/p/096e9929d8ed
+https://www.modb.pro/db/13828 TCPDelay导致的服务器时延过大
+linux上如何关闭delay-ACKhttps://blog.csdn.net/wdscq1234/article/details/52430382
+nagle是控制发送端的发送策略。nagle的精髓是使用接收端的速率控制发送方的发送速度。
+https://mp.weixin.qq.com/s?__biz=MzIxODU5MDYwNg==&mid=2247483731&idx=1&sn=e7edde77fad4bcb459c6a84e7ba401ba&chksm=97e97db2a09ef4a4665b8cfb3edd590f793c43d5f4253989a5257ebadc6acc7c931dbe2e899e#rd
+delay-ACK是接收端的确认策略。
+
+Delay-ACK在并不影响应用层即时得到数据。仅仅是ACKdelay,数据还是已经收到并可以交付上层处理了。
+
+创建TCP时可以设置关闭TCP_NODELAY，关闭发送时的Nagle
+
+Linux的MTU与MSS: https://www.cnblogs.com/wjoyxt/p/6873714.html
+
+tcp windows窗口是可以自动调节的。windows窗口和缓存buffer不是一个概念
+URG, 和URG都是接收方的控制
+
+<20> TCP 成块的数据
+tcp窗口通知机制
+初始化tcp连接时可以指定缓存区大小
+缓存区大小与窗口大小
+TCP PUSH标志位并不是立即发送不缓存。
+在每一个TCP例子中，我们都看到了PUSH标志，但一直没有介绍它的用途。发送方使用该标志通知接收方将所收到的数据全部提交给接收进程。
+这里的数据包括与PUSH一起传送的数据以及接收方TCP已经为接收进程收到的其他数据。
+然而，目前大多数的API没有向应用程序提供通知其TCP设置PUSH标志的方法。的确，许多实现程序认为PUSH标志已经过时，一个好的TCP实现能够自行决定何时设置这个标志。
+
+如果待发送数据将清空发送缓存，则大多数的源于伯克利的实现能够自动设置PUSH标志。这意味着我们能够观察到每个应用程序写的数据均被设置了PUSH标志，因为数据在写的时候就立即被发送。
+
+TCP的紧急数据，人们常常错误地称其为“带外数据”。TCP的紧急方式只是一个从发送方到接收方的通知，该通知告诉接收方紧急数据已被发送，并提供该数据最后一个字节的序号。应用程序使用的有关紧急数据部分的编程接口常常都不是最佳的，从而导致更多的混乱。
+
+
+<21>超时与重传
+一个很有意思的东西：低通过滤器：
+r 来自一个数列
+nextR = preR * 0.9 + curMessureR * 0.1
+这里的α是一个推荐值为0.9的平滑因子。每次进行新测量的时候，这个被平滑的RTT将得到更新。每个新估计的90％来自前一个估计，而10%则取自新的测量。
+用于tcp的RTT估算
+RTO=2RTT
+
+使我们看到TCP的许多实际算法：慢启动、拥塞避免、快速重传和快速恢复。我们也能够使用拥塞窗口和慢启动门限来手工计算TCP RTT估计器，并将这些值与跟踪输出的实际数据进行比较。
+
+以多种ICMP差错对TCP连接的影响以及TCP怎样允许对数据进行重新分组来结束本章。我们观察到“软”的ICMP差错没有引起TCP连接终止，但这些差错被保存以便在连接非正常中止时能够报告这些软差错。
+本章未看太懂，但是通过搜索懂了一些东西：
+1. 超时重传：https://zhuanlan.zhihu.com/p/101702312
+https://zhuanlan.zhihu.com/p/37379780
+
+<22>TCP坚持定时器
+解决window窗口为0的死锁问题
+
+<23>TCP的保活定时器
+KeepAlive并不是TCP协议规范的一部分，但在几乎所有的TCP/IP协议栈（不管是Linux还是Windows）中，都实现了KeepAlive功能。
+<24> 未来的TCP
+
+
+tcpdump
+
+
+TCP会用到ICMP数据报吗
+
+
+---
+Window系统有DNS缓存， windows中提供DNS缓存也是一个服务，可以使用net stop dnscache来停止
+Linux没有,Linux中的gethostbyname和gethostbyaddr是和应用链接在一起的，不属于内核的一部分。
+所以Linux没有系统级别的DNS缓存，必须应用自己做(比如浏览器就有缓存)
+
+在Linux上每次getHostbyName都会发送一个DNS请求。所以DNS服务器不稳定是可以影响应用的。
+可以在Linux上可以自己部署一个DNS服务器。然后把本机DNS地址设置为该服务器。
+DNS服务器是会缓存DNS的
+https://jaminzhang.github.io/dns/flush-dns-cache-in-Linux/
+https://www.itdojo.com/resolver-cache-linux-vs-windows/
+---
+IP层如何知道应该把IP报传给上层哪个协议？ip数据报头部有8位协议的标志位
+
+为什么UDP数据报里需要长度字段，而TCP数据报里没有长度字段呢？TCP和UDP报文长度，都可以通过IP报文里的长度数据计算。
+所以理论上UDP报文里的长度字段其实是冗余的。https://www.zhihu.com/question/25399270
+
+
+这再次表明UDP检验和（事实上，TCP/IP协议簇中所有的检验和）是简单的16 bit和。它们检测不出交换两个16 bit的差错。
+
+即时是UDP依然可以利用ICMP协议得知发送失败等信息。
+http://blog.chinaunix.net/uid-28458801-id-4990181.html
+
+一个域名配置多个A记录，DNS服务器该以什么样的策略返回？
+---
+网络中常用的校验和CRC到底是怎么算出来的
+
+
+---
+面向面试学习TCP/IP
+
+
+---
+使用Python自己实现一个TCP
+
+
+---
+linux的一些TCP调控参数
+
+
+---
+其他
+Linux的MTU与MSS:
+MSS就是TCP数据包每次能够传输的最大数据分段。为了达到最佳的传输效能
+TCP协议在建立连接的时候通常要协商双方的MSS值，这个值TCP协议在实现的
+时候往往用MTU值代替（需要减去IP数据包包头的大小20Bytes和TCP数据段的
+包头20Bytes）所以往往MSS为1460。通讯双方会根据双方提供的MSS值得最小
+值确定为这次连接的最大MSS值。
+
+窗口通知的单位为字节，因为一共16位所以最大位64k
+而MSS最大位1.445k
+
+TCP滑动窗口：https://www.cnblogs.com/hongdada/p/11171068.html
+
+
+
+
+g factor(g因子)，一般心智能力，即我们常说的IQ的前身，由Spearman于1904年提出，后被用于一战美国军队选拔并逐渐获得世界认可。小方块代表16种不同的认知能力测试。这16项测试结合成5个因素：推理、空间能力、记忆力、处理速度、词汇量。每个测试都有一组因子：这些数字可以被认为是个体测试和高阶潜在特征或能力领域之间的相关性。
+所有五个领域都与一般智力因素（g）有很高的关联
+
+
