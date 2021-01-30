@@ -185,3 +185,19 @@ g factor(g因子)，一般心智能力，即我们常说的IQ的前身，
 所有五个领域都与一般智力因素（g）有很高的关联
 
 
+
+Sequence Numbers
+
+All bytes in a TCP connection are numbered, beginning at a randomly chosen initial sequence number (ISN).
+The SYN packets consume one sequence number, so actual data will begin at ISN+1.
+The sequence number is the byte number of the first byte of data in the TCP packet sent (
+also called a TCP segment).
+The acknowledgement number is the sequence number of the next byte the receiver expects to receive.
+
+The receiver ack'ing sequence number x acknowledges receipt of all data bytes less than (but not including) byte number x.
+
+The sequence number is always valid.
+The acknowledgement number is only valid when the ACK flag is one.
+The only time the ACK flag is not set, that is,
+the only time there is not a valid acknowledgement number in the TCP header, is during the first packet of connection set-up.
+https://www.cs.miami.edu/home/burt/learning/Csc524.032/
