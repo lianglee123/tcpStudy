@@ -32,7 +32,6 @@ Receiver应该如何回应Sender, ?
 下一步：
 Receiver可以暂时缓存那些无序到达的数据
 """
-from typing import *
 import time
 import random
 from common import PipeDst, Frame
@@ -45,11 +44,11 @@ import queue
 def curMillSecond():
     return time.time() * 1000
 
-
+f = open("t.log", mode='w', encoding='utf8')
 def log(*args):
-    print(*args)
-    pass
-
+    print(*args, file=f)
+    # print(*args)
+    f.flush()
 
 class Pipe:
     """
@@ -62,7 +61,7 @@ class Pipe:
         self.sendPercent = sendPercent
         self.minDelay = minDelay
         self.maxDelay = maxDelay
-        self.q = queue.Queue(100000)
+        self.q = queue.Queue()
         _thread.start_new(self.run, ())
 
     def send(self, dst: PipeDst, frame):
@@ -71,7 +70,7 @@ class Pipe:
             self.q.put((self.randomSendTime(), dst, frame))
         else:
             if random.random() > self.sendPercent:
-                log("\tpipe---> discard put ", frame, " to ", dst)
+                # log("\tpipe---> discard put ", frame, " to ", dst)
                 return
             else:
                 self.q.put((self.randomSendTime(), dst, frame))
@@ -94,7 +93,7 @@ class Pipe:
             if v is not None:
                 t, d, f = v
                 if t <= nowMill:
-                    log("\tpipe--->real put ", f, " to ", d)
+                    # log("\tpipe--->real put ", f, " to ", d)
                     d.put(f)
                 else:
                     self.q.put((t, d, f))
@@ -130,7 +129,7 @@ class Sender(PipeDst):
         self.pipe = pipe
         self.receiver = receiver
         self.count = 0
-        self.ackQueue = queue.Queue(20)
+        self.ackQueue = queue.Queue()
         self.wSize = winSize
         self.reSendDuration = 50
         self.leftStepAverage = 0
@@ -156,6 +155,7 @@ class Sender(PipeDst):
             while sendIndex <= right:
                 fra = Frame(seq=sendIndex, data = data[sendIndex])
                 self.pipe.send(self.receiver, fra)
+                log("S: send %s" % fra)
                 sendIndex += 1
                 self.count += 1
             log("S: window: [%s,%s %s] send over" % (left, oldRight+1, right))
@@ -172,10 +172,11 @@ class Sender(PipeDst):
                     break
 
             if ack is None: # 超时未收到期望的ACK, 重新发送整个窗口
-                log("S: Wait ACK Timeout")
-                oldRight = left - 1
-                continue
-            elif left <= ack.seq <= right:
+                log("S: Wait ACK Timeout, expect: ", [left, right])
+                # oldRight = left - 1
+                self.pipe.send(self.receiver, Frame(seq=left, data=data[left]))
+                self.pipe.send(self.receiver, Frame(seq=left, data=data[left]))
+            elif left <= ack.seq <= right: # 窗口有滑动，也不应该重传整个窗口， 而只应该重传right指针扩展的那一部分
                 oldLeft = left
                 oldRight = right
                 left = ack.seq + 1
@@ -254,13 +255,13 @@ class Receiver(PipeDst):
             log("R: expectSeq change %s --> %s" % (oldExpectSeq, self.expectSeq))
             self.pipe.send(self.sender, Frame(self.expectSeq-1, "ACK"))
         elif frame.seq < self.expectSeq: # 接收到重复数据，且该重复数据为收到的最后一个数据，那么就重复发送ACK
-            if frame.seq == self.expectSeq - 1:
-                log("R: 收到上一个重复数据:", frame, self.expectSeq)
-                self.pipe.send(self.sender, Frame(frame.seq, "ACK"))
+            # if frame.seq == self.expectSeq - 1:
+            #     log("R: 收到上一个重复数据:", frame, self.expectSeq)
+            self.pipe.send(self.sender, Frame(self.expectSeq - 1, "ACK"))
             log("R: 收到已有的重复数据, do nothing", frame, self.expectSeq)
         else: # 现在有可能收到大于期望的了
             # raise ValueError("frame seq(%s) > expect(%s)" % (frame.seq, expectSeq))
-            log("R: 收到seq过大数据， 缓存, len(data) %s, frame.seq: %s" % (len(self.data), frame.seq))
+            log("R: 收到seq过大数据， 缓存, len(data) %s, frame.seq: %s, expect: " % (len(self.data), frame.seq), self.expectSeq)
             if len(self.data) <= frame.seq: # 填充空位
                 self.data.extend([None for _ in range(len(self.data), frame.seq+1)])
                 self.data[frame.seq] = frame.data
@@ -268,10 +269,10 @@ class Receiver(PipeDst):
                 self.pipe.send(self.sender, Frame(self.expectSeq-1, "ACK"))
             else:
                 if self.data[frame.seq] is not None:
-                    log("R: 收到重复数据，丢弃 %s, oldData: %s", frame, self.data[frame.seq])
+                    log("R: 收到未确认重复数据，丢弃 %s, oldData: %s" % (frame, self.data[frame.seq]))
                 else:
                     self.data[frame.seq] = frame.data
-                    log("R: 收到乱序数据，缓存, %s", frame)
+                    log("R: 收到乱序数据，缓存, %s" % frame)
 
 
     def __repr__(self):
@@ -279,8 +280,8 @@ class Receiver(PipeDst):
 
 
 def send(srcfile, dstFile):
-    pipe = Pipe(1)
-    winSize = 10000
+    pipe = Pipe(0.9)
+    winSize = 1000
     receiver = Receiver(pipe, None, winSize=winSize)
     sender = Sender(pipe, receiver, winSize=winSize)
 
@@ -332,5 +333,10 @@ if __name__ == '__main__':
     # (注意在思考时，带宽是影响RTT的因素，所以我们不用直接思考带宽，只用思考RTT就行)
     # run("data.txt", "data.2.txt")
     # run("hello.txt", "hello.2.txt")
-    run("tale-of-two-cities.txt", "tale-of-two-cities.2.txt")
+    # run("10w.txt", "10w.2.txt")
+    # run("5w.txt", "5w.2.txt")
+    run("1w.txt", "1w.2.txt")
+    # run("tale-of-two-cities.txt", "tale-of-two-cities.2.txt")
+    f.flush()
+    f.close()
 

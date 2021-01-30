@@ -1,4 +1,4 @@
-from typing import *
+import sys
 
 
 def run():
@@ -13,5 +13,7 @@ def run():
 if __name__ == '__main__':
     with open("tale-of-two-cities.txt", encoding="utf8") as f:
         data = f.read()
+    with open("1W.txt", mode='w', encoding='utf8') as f:
+        f.write("".join(data[:10000]))
     print("dataSize: %s " % len(data))
 
