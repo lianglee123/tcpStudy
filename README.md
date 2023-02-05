@@ -64,7 +64,17 @@ https://www.cs.miami.edu/home/burt/learning/Csc524.032/
 https://blog.csdn.net/whgtheone/article/details/80983882
 ### 11.TCP如何确定滑动窗口的大小
 swnd = min(rwnd, cwnd*mss)
-rwnd为接收方的接收窗口的大小。
+rwnd为协商出的接收方的接收窗口的大小。
+cwnd为拥塞控制窗口的大小，但是其单位MSS(最大分段大小)
+rwnd是为了防止 [发送方] 的数据填满 [接收方] 的缓存，但是并不知道网络中发生了什么。
+在网络出现拥堵时，如果继续发生大量数据包，可能会导致数据包时延，丢失等，这时TCP就会重传，
+一重传加重网络负担，于是更多包延迟或者丢包，形成恶性循环。
+拥塞控制就是用来避免[发送方] 的数据填满整个网络。
+为了在[发送方]调节要发送数据的量，定义了一个叫做 拥塞窗口(congest window)的概念。
+原文连接：https://blog.csdn.net/weixin_50911232/article/details/126911476
+————————————————
+版权声明：本文为CSDN博主「蜗牛不慵懒」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_50911232/article/details/126911476
 ### 12.说下TCP拥塞控制的机制
 TCP的发送端滑动窗口是min(receiveWindow, cwnd)
 TCP是通过通知控制cwnd(congestion windows, 其单位为MSS)的变动,来进行拥塞控制的。
