@@ -71,10 +71,8 @@ rwnd是为了防止 [发送方] 的数据填满 [接收方] 的缓存，但是�
 一重传加重网络负担，于是更多包延迟或者丢包，形成恶性循环。
 拥塞控制就是用来避免[发送方] 的数据填满整个网络。
 为了在[发送方]调节要发送数据的量，定义了一个叫做 拥塞窗口(congest window)的概念。
-原文连接：https://blog.csdn.net/weixin_50911232/article/details/126911476
-————————————————
-版权声明：本文为CSDN博主「蜗牛不慵懒」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/weixin_50911232/article/details/126911476
+参考：https://blog.csdn.net/weixin_50911232/article/details/126911476
+
 ### 12.说下TCP拥塞控制的机制
 TCP的发送端滑动窗口是min(receiveWindow, cwnd)
 TCP是通过通知控制cwnd(congestion windows, 其单位为MSS)的变动,来进行拥塞控制的。
